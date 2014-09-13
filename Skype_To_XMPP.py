@@ -10,7 +10,8 @@ from sleekxmpp import ClientXMPP, JID
 
 import sqlite3
 
-jid = "YOUR_USER_JID"
+thisJid = "YOUR_USER_JID"
+rcvJid = "RECEIVER_USER_ESCAPED_JID_WITH_DOMAIN"
 passwd = "PASSWORD"
 domain = "DOMAIN"
 server = "SERVER"
@@ -37,7 +38,7 @@ class HeraldBot(ClientXMPP):
         self.last_auth_request = datetime.now()
 
     def message_send(self, msgBody):
-        self.send_message(mto="any1\\40test.com@adstream", mbody=msgBody, msubject=message_subject)
+        self.send_message(mto=rcvJid, mbody=msgBody, msubject=message_subject)
 
     def session_start(self, event):
         self.send_presence()
@@ -52,9 +53,11 @@ def main(argv):
 
     port = 5222
 
+    jid_escaped = JID(local = thisJid, domain = domain)
+
     def int_handler(signum, frame):
         print('Disconnecting!')
-	xmpp.disconnect()
+    xmpp.disconnect()
         sys.exit(0)
     signal.signal(signal.SIGINT, int_handler)
 
@@ -68,11 +71,10 @@ def main(argv):
     except:
         print("Can't connect to DB")
         sys.exit(1)
+    (last_msg_id,) = c.fetchone()
 
-    jid_escaped = JID(local = jid, domain = domain)
-
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(levelname)-8s %(message)s')
+#    logging.basicConfig(level=logging.DEBUG,
+#                        format='%(levelname)-8s %(message)s')
     xmpp = HeraldBot(jid_escaped, passwd, plugin_config=plugin_config)
     xmpp.auto_authorize = True
     xmpp.auto_subscribe = True
@@ -81,12 +83,25 @@ def main(argv):
     xmpp.process(block=False)
     xmpp.last_auth_request = datetime.now()
 
-    (last_msg_id,) = c.fetchone()
     while True:
         sleep(interval)
-        for id, body, name in c.execute("select id, body_xml, from_dispname from Messages where id > ?;", (last_msg_id,)):
+        for id, body, name, chatname in c.execute("select id, body_xml, from_dispname, chatname from Messages where id > ?;", (last_msg_id,)):
             last_msg_id = max(id, last_msg_id)
-            msg = name + "::" + body
+            selectChat = str("select topic, friendlyname from Chats where name='" + chatname + "'")
+            chat = ""
+            friendlyname = ""
+            c.execute(selectChat)
+            fetched = c.fetchone()
+            chat = fetched[0]
+            friendlyname = fetched[1]
+            name = name if name is not None else "INVALID_NAME"
+            body = body if body is not None else "INVALID_BODY"
+            chat = chat if chat is not None else friendlyname if friendlyname is not None else "INVALID_CHAT"
+            print("Chat: " + chat)
+            print("Name: " + name)
+            print("Body: " + body)
+            print("=============")
+            msg = chat + "::" + name + "::" + body
             xmpp.message_send(msg)
 
 
