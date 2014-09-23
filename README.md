@@ -23,9 +23,12 @@ Then launch as
 
 python Skype_To_Xmpp.py <path to skype `main.db` file> <watch interval in seconds>
 
+Dependencies
+------------
+sleekxmpp (pip install sleekxmpp)
 
 Notice
 ------
 On Linux (tried under CentOS) all works fine
 On MacOS can't connect to Skype DB because can't create more then one connection to DB (If anyone will find decision please let me know, I will be grateful)
-On Windows - not tried
+On Windows - works well
