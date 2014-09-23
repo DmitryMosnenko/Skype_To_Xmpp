@@ -88,15 +88,18 @@ def main(argv):
         for id, body, name, chatname in c.execute("select id, body_xml, from_dispname, chatname from Messages where id > ?;", (last_msg_id,)):
             last_msg_id = max(id, last_msg_id)
             selectChat = str("select topic, friendlyname from Chats where name='" + chatname + "'")
-            chat = ""
-            friendlyname = ""
-            c.execute(selectChat)
-            fetched = c.fetchone()
-            chat = fetched[0]
-            friendlyname = fetched[1]
+            # chat = ""
+            # friendlyname = ""
+            # c.execute(selectChat)
+            # fetched = c.fetchone()
+            # chat = fetched[0]
+            # friendlyname = fetched[1]
+            for chat, friendlyname in c.execute(selectCHat)
+                chat = chat if chat is not None else friendlyname if friendlyname is not None else "INVALID_CHAT"
+                break
             name = name if name is not None else "INVALID_NAME"
             body = body if body is not None else "INVALID_BODY"
-            chat = chat if chat is not None else friendlyname if friendlyname is not None else "INVALID_CHAT"
+            # chat = chat if chat is not None else friendlyname if friendlyname is not None else "INVALID_CHAT"
             print("Chat: " + chat)
             print("Name: " + name)
             print("Body: " + body)
